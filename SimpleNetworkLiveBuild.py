@@ -6,6 +6,22 @@ class Layer:
     def __init__(self):
         self.nodes = np.array([])
         self.weights = np.array([])
+    
+    def activate_nodes(self,nodes_prior_layer):
+        #check if calculation can be done
+        if not self.weights.all(): #if no weights are given I am in the first layer
+            print("no weights set")
+            return
+        dim=self.weights.shape
+        dim2=nodes_prior_layer.shape
+        if not dim[0]==dim2[1]:
+            print("wrong number of elements in prior layer")
+            print(dim)
+            print(dim2)
+            return
+            #in future rais proper exception. 
+        #calculate nodes_prior_layer*self.weights
+        self.nodes = nodes_prior_layer@self.weights
 
 
 
@@ -17,7 +33,7 @@ class Layer:
 # define the input layer (must be 28^2 by 1)
 # define weight matrix per layer
 # define normalization function
-def normalization_sigmoid(x,x0,b):
+def normalization_sigmoid(x,x0=0,b=1):
     x=x-x0
     return 1/(1+np.exp(-b*x))
 
@@ -31,7 +47,7 @@ layers = [Layer()]  # now layer[0] exists
 ## test normalization func
 #define a way to update the weights given cost function
 #plt.subplots() # create the figure and axis
-#
+
 #plt.clf() #clear the figure
 #for k in np.linspace(-5, 5, 20): #loop over a range of values
 #    #print(normalization_sigmoid(k,0,1))
@@ -43,7 +59,7 @@ training_data=sf.read_idx(r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST\
 training_labels=sf.read_idx(r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST\train-labels.idx1-ubyte")
 
 #push first image into input layer
-layer_input = np.reshape(training_data[0],(28**2,1))
+layer_input = np.reshape(training_data[0],(1,28**2))
 # print(layer_input.shape)
 # for i in range(256,300):
 #    print(layer_input[i])
@@ -56,6 +72,7 @@ layer_input = np.reshape(training_data[0],(28**2,1))
 #plt.show()
 
 # define layer(s)
+# that is, build the network
 for i in range(0,len(n_nodes_per_layer)):
     if i == 0:
         layers[0].nodes=np.array(layer_input)
@@ -63,4 +80,8 @@ for i in range(0,len(n_nodes_per_layer)):
         layers.append(Layer())
         layers[i].nodes = np.array(np.zeros([1 ,n_nodes_per_layer[i]]))
         layers[i].weights=np.array(np.random.uniform(-1,1,[n_nodes_per_layer[i-1],n_nodes_per_layer[i]]))
-print(layers[1].weights.shape)
+print(layers[0].nodes.shape)
+print(layers[1].nodes)
+layers[1].activate_nodes(layers[0].nodes)
+print(layers[1].nodes)
+print(normalization_sigmoid(layers[1].nodes))
