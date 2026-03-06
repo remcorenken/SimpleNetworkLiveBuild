@@ -6,6 +6,9 @@ class Layer:
     def __init__(self):
         self.nodes = np.array([])
         self.weights = np.array([])
+    def __str__(self):
+        return f"nodes({self.nodes.shape})\nweights({self.weights.shape})\n"
+
     
     def activate_nodes(self,nodes_prior_layer):
         #check if calculation can be done
@@ -19,7 +22,7 @@ class Layer:
             print(dim)
             print(dim2)
             return
-            #in future rais proper exception. 
+            #in future raise proper exception. 
         #calculate nodes_prior_layer*self.weights
         self.nodes = nodes_prior_layer@self.weights
 
@@ -27,16 +30,21 @@ class Layer:
 
 
 # define the cost function
-# define number of layers
-# define number of nodes per layer
-# define the final layer (must be 10 classes)
-# define the input layer (must be 28^2 by 1)
-# define weight matrix per layer
+## define number of layers
+## define number of nodes per layer
+## define the final layer (must be 10 classes)
+## define the input layer (must be 28^2 by 1)
+## define weight matrix per layer
 # define normalization function
 def normalization_sigmoid(x,x0=0,b=1):
     x=x-x0
     return 1/(1+np.exp(-b*x))
-
+    
+def forward_calculation(layers):
+    for i in range(1,len(n_nodes_per_layer)): 
+        layers[i].activate_nodes(layers[i-1].nodes)
+        #apply the normalization_sigmoid to each node in the current layer
+        
 ## main program
 #layer 0 will be the input layer, layer 1..N-1 will be the intermediate layers, layer N will be the output layer
 n_nodes_per_layer=[28**2,10] # input layer, output layer, these have fixed values no intermediate layers at this point
@@ -80,8 +88,13 @@ for i in range(0,len(n_nodes_per_layer)):
         layers.append(Layer())
         layers[i].nodes = np.array(np.zeros([1 ,n_nodes_per_layer[i]]))
         layers[i].weights=np.array(np.random.uniform(-1,1,[n_nodes_per_layer[i-1],n_nodes_per_layer[i]]))
-print(layers[0].nodes.shape)
+ # forward calculation
 print(layers[1].nodes)
-layers[1].activate_nodes(layers[0].nodes)
+forward_calculation(layers)
 print(layers[1].nodes)
-print(normalization_sigmoid(layers[1].nodes))
+
+#print(layers[0].nodes.shape)
+#print(layers[1].nodes)
+#layers[1].activate_nodes(layers[0].nodes)
+#print(layers[1].nodes)
+#print(normalization_sigmoid(layers[1].nodes))
