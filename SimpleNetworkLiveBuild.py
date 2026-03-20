@@ -2,13 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 import SupportFunctions as sf
 
+def normalization_sigmoid(x,x0=0,b=1):
+    x=x-x0
+    return 1/(1+np.exp(-b*x))
+    
+def normalize_last_layer(L):
+    S=np.sum(L.nodes)
+    print(S)
+    L.nodes = L.nodes/S
+    
 class Layer:
     def __init__(self):
         self.nodes = np.array([])
         self.weights = np.array([])
     def __str__(self):
         return f"nodes({self.nodes.shape})\nweights({self.weights.shape})\n"
-
     
     def activate_nodes(self,nodes_prior_layer):
         #check if calculation can be done
@@ -25,6 +33,9 @@ class Layer:
             #in future raise proper exception. 
         #calculate nodes_prior_layer*self.weights
         self.nodes = nodes_prior_layer@self.weights
+        for i in range(0,len(self.nodes)):
+            self.nodes[i]=normalization_sigmoid(self.nodes[i],0,1e-3)
+
 
 
 
@@ -36,10 +47,7 @@ class Layer:
 ## define the input layer (must be 28^2 by 1)
 ## define weight matrix per layer
 # define normalization function
-def normalization_sigmoid(x,x0=0,b=1):
-    x=x-x0
-    return 1/(1+np.exp(-b*x))
-    
+
 def forward_calculation(layers):
     for i in range(1,len(n_nodes_per_layer)): 
         layers[i].activate_nodes(layers[i-1].nodes)
@@ -91,6 +99,8 @@ for i in range(0,len(n_nodes_per_layer)):
  # forward calculation
 print(layers[1].nodes)
 forward_calculation(layers)
+print(layers[1].nodes)
+normalize_last_layer(layers[-1])
 print(layers[1].nodes)
 
 #print(layers[0].nodes.shape)
