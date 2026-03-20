@@ -2,6 +2,40 @@ import numpy as np
 import struct
 import matplotlib.pyplot as plt
 
+import os
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+
+def get_valid_folder() -> str:
+    path1 = r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST" #modify for your local system(s)
+    path2 = r"C:\Users\remco\PycharmProjects\SimpleNetworkLiveBuild\TrainDataMNIST"
+
+    # 1. Try first file
+    if os.path.exists(path1):
+        return path1
+
+    # 2. Try second file
+    if os.path.exists(path2):
+        return path2
+
+
+    # 3. If both fail, ask the user via GUI
+    print("Neither file found. Please select a file.")
+
+    # Hide the root Tk window
+    root = Tk()
+    root.withdraw()
+
+    filename = askopenfilename(
+        title="Select your data file",
+        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+    )
+
+    if filename:
+        return filename
+    else:
+        raise FileNotFoundError("No file selected and default files not found.")
+
 def read_idx(filename: str) -> np.ndarray:
     with open(filename, 'rb') as f:
         # Read the magic number and dimensions
@@ -12,8 +46,8 @@ def read_idx(filename: str) -> np.ndarray:
         return data
 
 if __name__ == '__main__':# Usage:
-    train_images = read_idx(r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST\train-images.idx3-ubyte")
-    train_labels = read_idx(r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST\train-labels.idx1-ubyte")
+    train_images = read_idx(os.path.join(get_valid_folder(), 'train-images.idx3-ubyte'))
+    train_labels = read_idx(os.path.join(get_valid_folder(), 'train-labels.idx1-ubyte'))
 
 
     print(train_images.shape)  # (60000, 28, 28)
