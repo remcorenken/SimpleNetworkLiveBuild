@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import SupportFunctions as sf
+import Support as sf
 import os
 
 class Layer:
