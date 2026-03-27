@@ -54,6 +54,9 @@ def forward_calculation(layers):
         layers[i].activate_nodes(layers[i-1].nodes)
         #apply the normalization_sigmoid to each node in the current layer
 
+def get_error(expected,actual):
+    return np.sum((actual-expected)**2)/len(actual)
+    
 # I wanted to visualise the network as an image
 # no need to fully understand, but it is fun though
 def layer_plot(layers) -> None:
@@ -119,21 +122,48 @@ layer_input = np.reshape(training_data[0],(1,28**2))/255 #scale values between 0
 # that is, build the network
 for i in range(0,len(n_nodes_per_layer)):
     if i == 0:
-        layers[0].nodes=np.array(layer_input)
+        layers[0].nodes = np.array(np.zeros([1, n_nodes_per_layer[0]]))
     else:
         layers.append(Layer())
         layers[i].nodes = np.array(np.zeros([1 ,n_nodes_per_layer[i]]))
         layers[i].weights=np.array(np.random.uniform(-1,1,[n_nodes_per_layer[i-1],n_nodes_per_layer[i]]))
+ 
+ ## training part.
+ # loop over training examples
+ # select the input and the label
+trial_selector = 0
+ # set the input layer
+layers[0].nodes = np.array(np.reshape(training_data[trial_selector],(1,28**2))/255)
+ # define the expected outcome.
+print(type(training_labels[trial_selector])) 
+expected = np.zeros([1,n_nodes_per_layer[-1]])
+print(expected)
+expected[0,training_labels[trial_selector]] = 1
  # forward calculation
-print(layers[1].nodes)
 forward_calculation(layers)
-print(layers[1].nodes)
+ # get error
+err = get_error(expected,layers[-1].nodes)
+print(err)
+ # get de/dw use chain rule !!
+ # addapt w
+ # get de/dx0
+ # addapt x0
+ # more too do. 
+ 
+ 
+ 
+ 
+ # forward calculation
+#print(layers[1].nodes)
+#forward_calculation(layers)
+#print(layers[1].nodes)
 
-normalize_last_layer(layers[-1])
-print(layers[1].nodes)
-layer_plot(layers)
-plt.ion()
-plt.show()
+#normalize_last_layer(layers[-1])
+#print(layers[1].nodes)
+#print(np.sum(layers[1].nodes))
+#layer_plot(layers)
+#plt.ion()
+#plt.show()
 
 #print(layers[0].nodes.shape)
 #print(layers[1].nodes)
