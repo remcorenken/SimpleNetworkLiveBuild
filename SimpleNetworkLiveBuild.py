@@ -12,7 +12,7 @@ def dnormalization_sigmoid(x,x0=0,b=1):
     return -b*E/(1+E)**2
 
 def normalization_sigmoid_layer(L):
-    print(L.nodes.shape)
+    #print(L.nodes.shape)
     for i in range(len(L.nodes)):
         L.nodes[i]=normalization_sigmoid(L.nodes[i])
     
@@ -103,12 +103,12 @@ def layer_plot(layers) -> None:
                 plt.plot([xp, xn], [yp, yn], 'k-', linewidth=np.abs(w),alpha=0.5)
 
     plt.colorbar(label="Value (used for size and color)")
-    plt.show()
+    plt.show(block=False)
 
 
 ## main program
 #layer 0 will be the input layer, layer 1..N-1 will be the intermediate layers, layer N will be the output layer
-n_nodes_per_layer=[28**2,10,10] # input layer, output layer, these have fixed values no intermediate layers at this point
+n_nodes_per_layer=[28**2,2,10] # input layer, output layer, these have fixed values no intermediate layers at this point
 # define the input layer
 #layer_input= np.zeros((1,28**2))
 layers = [Layer()]  # now layer[0] exists
@@ -166,7 +166,8 @@ expected[0,training_labels[trial_selector]] = 1
 forward_calculation(layers)
  # get error
 err = get_error(expected,layers[-1].nodes)
-#print(err)
+# print('error')
+# print(err)
  # get de/dw use chain rule !!
  # a(L)=sigma(z) #sigma is the normalization function
  # z(L)=(sum(a(L-1)*w)-x0)
@@ -179,19 +180,34 @@ err = get_error(expected,layers[-1].nodes)
  # addapt x0
  # more too do.
  ####
- 
+layer_plot(layers) 
 ## for last layer 
-#tmp=get_derror(expected,layers[-1].nodes)# de/da
-#print(tmp)
-#tmp2=dnormalize_last_layer(layers[-1]) # da/dz
-#print(tmp2)
-#tmp3=dzdw(layers[-2])# dz/dw
-#print(tmp3.shape)
-#for n in layers[-1].nodes:
-#    tmp4=dnormalization_sigmoid(n)
-#    print(tmp4)
-#print(layers[-1])
-#dedw=tmp3*tmp2*tmp
+# print(expected)
+tmp=get_derror(expected,layers[-1].nodes)# de/da
+# print(tmp.shape)
+tmp2=dnormalize_last_layer(layers[-1]) # da/dz
+# print('de/dz')
+# print((tmp2*tmp).shape)
+tmp3=dzdw(layers[-2])# dz/dw
+# print('shape tmp3')
+# print(tmp3.shape)
+# print('size of w final layer')
+# print(layers[-1].weights.shape)
+# print(tmp3)
+dedw=tmp3.T*tmp2*tmp
+# print(dedw)
+#update weights final layer
+#define learning rate
+print(layers[-1].weights)
+lr=0.01
+#update last layer weights
+layers[-1].weights=layers[-1].weights+lr*dedw
+print(layers[-1].weights)
+# for n in layers[-1].nodes:
+    # tmp4=dnormalization_sigmoid(n)
+    # print(n,tmp4)
+# print(layers[-1])
+
  
  
  
