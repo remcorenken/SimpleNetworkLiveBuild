@@ -6,11 +6,26 @@ import os
 def normalization_sigmoid(x,x0=0,b=1):
     x=x-x0
     return 1/(1+np.exp(-b*x))
+def dnormalization_sigmoid(x,x0=0,b=1):
+    x=x-x0
+    E=np.exp(-b*x)
+    return -b*E/(1+E)**2
+
+def normalization_sigmoid_layer(L):
+    print(L.nodes.shape)
+    for i in range(len(L.nodes)):
+        L.nodes[i]=normalization_sigmoid(L.nodes[i])
     
 def normalize_last_layer(L):
     S=np.sum(L.nodes)
-    print(S)
     L.nodes = L.nodes/S
+
+def dnormalize_last_layer(L):
+    S=np.sum(L.nodes)
+    return 1/S
+    
+def dzdw(PL):
+    return(PL.nodes)
     
 class Layer:
     def __init__(self):
@@ -36,7 +51,7 @@ class Layer:
         self.nodes = nodes_prior_layer@self.weights
         for i in range(0,len(self.nodes)):
             self.nodes[i]=normalization_sigmoid(self.nodes[i],0,1e-3)
-
+    
 
 
 
@@ -53,9 +68,17 @@ def forward_calculation(layers):
     for i in range(1,len(n_nodes_per_layer)): 
         layers[i].activate_nodes(layers[i-1].nodes)
         #apply the normalization_sigmoid to each node in the current layer
-
+        if i==len(n_nodes_per_layer)-1: #Last layer special treatment
+            normalize_last_layer(layers[i])
+        else:
+            normalization_sigmoid_layer(layers[i])
+            
+def backward_calculation(layers):
+    pass
 def get_error(expected,actual):
     return np.sum((actual-expected)**2)/len(actual)
+def get_derror(expected,actual):
+    return 2*(actual-expected)/len(actual)
     
 # I wanted to visualise the network as an image
 # no need to fully understand, but it is fun though
@@ -85,7 +108,7 @@ def layer_plot(layers) -> None:
 
 ## main program
 #layer 0 will be the input layer, layer 1..N-1 will be the intermediate layers, layer N will be the output layer
-n_nodes_per_layer=[28**2,10] # input layer, output layer, these have fixed values no intermediate layers at this point
+n_nodes_per_layer=[28**2,10,10] # input layer, output layer, these have fixed values no intermediate layers at this point
 # define the input layer
 #layer_input= np.zeros((1,28**2))
 layers = [Layer()]  # now layer[0] exists
@@ -135,28 +158,48 @@ trial_selector = 0
  # set the input layer
 layers[0].nodes = np.array(np.reshape(training_data[trial_selector],(1,28**2))/255)
  # define the expected outcome.
-print(type(training_labels[trial_selector])) 
+#print(type(training_labels[trial_selector])) 
 expected = np.zeros([1,n_nodes_per_layer[-1]])
-print(expected)
+#print(expected)
 expected[0,training_labels[trial_selector]] = 1
  # forward calculation
 forward_calculation(layers)
  # get error
 err = get_error(expected,layers[-1].nodes)
-print(err)
+#print(err)
  # get de/dw use chain rule !!
+ # a(L)=sigma(z) #sigma is the normalization function
+ # z(L)=(sum(a(L-1)*w)-x0)
+ # de/dw = dz/dw*da/dz*de/da
  # addapt w
+ #### currently x0 is fixed. In the future we can update this per node
+ # also b is fixed, needs to be variabel and updatable per node
  # get de/dx0
+ # de/dx0=dz/dx0*da/dz*de/da
  # addapt x0
- # more too do. 
+ # more too do.
+ ####
+ 
+## for last layer 
+#tmp=get_derror(expected,layers[-1].nodes)# de/da
+#print(tmp)
+#tmp2=dnormalize_last_layer(layers[-1]) # da/dz
+#print(tmp2)
+#tmp3=dzdw(layers[-2])# dz/dw
+#print(tmp3.shape)
+#for n in layers[-1].nodes:
+#    tmp4=dnormalization_sigmoid(n)
+#    print(tmp4)
+#print(layers[-1])
+#dedw=tmp3*tmp2*tmp
  
  
  
- 
- # forward calculation
-#print(layers[1].nodes)
+#forward calculation
 #forward_calculation(layers)
+#layer_plot(layers)
 #print(layers[1].nodes)
+#print(layers[2].nodes)
 
 #normalize_last_layer(layers[-1])
 #print(layers[1].nodes)
