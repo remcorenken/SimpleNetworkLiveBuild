@@ -6,6 +6,12 @@ import os
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
+def GenSinTrainSet(x: np.array,s:float) -> np.array:
+    x=np.asarray(x)
+    y=np.sin(x)
+    ye=y+np.random.randn(*x.shape)*s
+    return y,ye
+    
 def get_valid_folder() -> str:
     path1 = r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST" #modify for your local system(s)
     path2 = r"C:\Users\remco\PycharmProjects\SimpleNetworkLiveBuild\TrainDataMNIST"

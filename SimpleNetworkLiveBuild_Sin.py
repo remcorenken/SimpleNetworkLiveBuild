@@ -129,12 +129,12 @@ def layer_plot(layers) -> None:
                 plt.plot([xp, xn], [yp, yn], 'k-', linewidth=np.abs(w),alpha=0.5)
 
     plt.colorbar(label="Value (used for size and color)")
-    plt.show(block=False)
+    plt.show(block=True)
 
 
 ## main program
 #layer 0 will be the input layer, layer 1..N-1 will be the intermediate layers, layer N will be the output layer
-n_nodes_per_layer=[28**2,2,10] # input layer, output layer, these have fixed values no intermediate layers at this point
+n_nodes_per_layer=[1,5,5,1] # input layer, output layer, these have fixed values no intermediate layers at this point
 # define the input layer
 #layer_input= np.zeros((1,28**2))
 layers = [Layer()]  # now layer[0] exists
@@ -150,22 +150,12 @@ layers = [Layer()]  # now layer[0] exists
 #plt.show()
 
 # load the data
-# training_data=sf.read_idx(r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST\train-images.idx3-ubyte")
-# training_labels=sf.read_idx(r"C:\Users\RenkenRJ\PyCharmMiscProject\TrainDataMNIST\train-labels.idx1-ubyte")
-training_data=sf.read_idx(os.path.join(sf.get_valid_folder(), 'train-images.idx3-ubyte'))
-training_labels=sf.read_idx(os.path.join(sf.get_valid_folder(),'train-labels.idx1-ubyte'))
-#push first image into input layer
-layer_input = np.reshape(training_data[0],(1,28**2))/255 #scale values between 0 and 1
-# print(layer_input.shape)
-# for i in range(256,300):
-#    print(layer_input[i])
-#check if loading worked.
-#print(training_data.shape)  # (60000, 28, 28)
-#print(training_labels.shape)  # (60000,)
 
-#plt.imshow(training_data[0], cmap='gray')
-#plt.title(f"Label: {training_labels[0]}")
-#plt.show()
+x=np.random.rand(100)*6 #define 100 random points to evaluate. 
+training_data,training_labels=sf.GenSinTrainSet(x,1)#us a std of 1
+#push first image into input layer
+layer_input = np.reshape(training_data[0],(1,1))
+# print(layer_input.shape)
 
 # define layer(s)
 # that is, build the network
@@ -182,81 +172,17 @@ for i in range(0,len(n_nodes_per_layer)):
  # select the input and the label
 trial_selector = 0
  # set the input layer
-layers[0].nodes = np.array(np.reshape(training_data[trial_selector],(1,28**2))/255)
+layers[0].nodes = np.array(np.reshape(training_data[trial_selector],layers[0].nodes.shape))
  # define the expected outcome.
-#print(type(training_labels[trial_selector])) 
-expected = np.zeros([1,n_nodes_per_layer[-1]])
-#print(expected)
-expected[0,training_labels[trial_selector]] = 1
+expected = training_labels[trial_selector]
+print(expected)
  # forward calculation
 forward_calculation(layers)
- # get error
-#err = get_error(expected,layers[-1].nodes)
-# print('error')
-# print(err)
- # get de/dw use chain rule !!
- # a(L)=sigma(z) #sigma is the normalization function
- # z(L)=(sum(a(L-1)*w)-x0)
- # de/dw = dz/dw*da/dz*de/da
- # addapt w
- #### currently x0 is fixed. In the future we can update this per node
- # also b is fixed, needs to be variabel and updatable per node
- # get de/dx0
- # de/dx0=dz/dx0*da/dz*de/da
- # addapt x0
- # more too do.
+#layer_plot(layers)
+print(get_error(expected,layers[-1].nodes)) 
+ 
  ####
-backward_calculation(layers,expected)
+#backward_calculation(layers,expected)
  
  
  
-#layer_plot(layers) 
-## for last layer 
-# print(expected)
-#tmp=get_derror(expected,layers[-1].nodes)# de/da
-#print(tmp)
-#tmp2=dnormalize_last_layer(layers[-1]) # da/dz
-# print('de/dz')
-# print((tmp2*tmp).shape)
-#tmp3=dzdw(layers[-2])# dz/dw
-# print('shape tmp3')
-# print(tmp3.shape)
-# print('size of w final layer')
-# print(layers[-1].weights.shape)
-
-#dedw=tmp3.T*tmp2*tmp
-
-#update weights final layer
-#define learning rate
-#print(layers[-1].weights)
-## modifying bit
-#lr=0.01
-#update last layer weights
-#layers[-1].weights=layers[-1].weights-lr*dedw
-#print(layers[-1].weights)
-# for n in layers[-1].nodes:
-    # tmp4=dnormalization_sigmoid(n)
-    # print(n,tmp4)
-# print(layers[-1])
-
- 
- 
- 
-#forward calculation
-#forward_calculation(layers)
-#layer_plot(layers)
-#print(layers[1].nodes)
-#print(layers[2].nodes)
-
-#normalize_last_layer(layers[-1])
-#print(layers[1].nodes)
-#print(np.sum(layers[1].nodes))
-#layer_plot(layers)
-#plt.ion()
-#plt.show()
-
-#print(layers[0].nodes.shape)
-#print(layers[1].nodes)
-#layers[1].activate_nodes(layers[0].nodes)
-#print(layers[1].nodes)
-#print(normalization_sigmoid(layers[1].nodes))
