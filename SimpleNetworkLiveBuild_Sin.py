@@ -17,12 +17,18 @@ def normalization_sigmoid_layer(L):
         L.nodes[i]=normalization_sigmoid(L.nodes[i])
     
 def normalize_last_layer(L):
-    S=np.sum(L.nodes)
-    L.nodes = L.nodes/S
+    if L.nodes.size > 2:
+        S=np.sum(L.nodes)
+        L.nodes = L.nodes/S
+    else:
+        pass
 
 def dnormalize_last_layer(L):
-    S=np.sum(L.nodes)
-    return 1/S
+    if L.nodes.size > 2:
+        S=np.sum(L.nodes)
+        return 1/S
+    else:
+        return 1
     
 def dzdw_func(PL):
     return(PL.nodes)
@@ -35,6 +41,7 @@ class Layer:
         return f"nodes({self.nodes.shape})\nweights({self.weights.shape})\n"
     
     def activate_nodes(self,nodes_prior_layer):
+        # calculate z-value for each node in this layer based on the nodes of the prior layer and the weights of this layer.
         #check if calculation can be done
         if not self.weights.all(): #if no weights are given I am in the first layer
             print("no weights set")
@@ -49,8 +56,9 @@ class Layer:
             #in future raise proper exception. 
         #calculate nodes_prior_layer*self.weights
         self.nodes = nodes_prior_layer@self.weights
-        for i in range(0,len(self.nodes)):
-            self.nodes[i]=normalization_sigmoid(self.nodes[i])
+#       do not do squasification here, as this is done in the forward calculation function.
+#        for i in range(0,len(self.nodes)):
+#            self.nodes[i]=normalization_sigmoid(self.nodes[i])
     
 
 
@@ -81,6 +89,35 @@ def get_error(expected,actual):
     return np.sum((actual-expected)**2)/len(actual)
 def get_derror(expected,actual):
     return 2*(actual-expected)/len(actual)
+def bck_calc(layers,expected):
+    # run the backward calculation starting at the last layer. 
+     lr = 0.01 #define a learning rate for the weight update.
+    # start the loop over layers backwards.
+    for i in range(len(layers)-1,0,-1):
+        # get the desired change per node 
+        da =-1*(layers[i].nodes - expected)# calculate dz
+        if i==(len(layers)-1): #last layer has a deviating normalization function. 
+            dzda=dnormalize_last_layer(layers[i])  
+        else:
+            dzda=dnormalization_sigmoid(layers[i].nodes) #currently fixed values for b and x0, in future these will need to be trained as well.     
+        dz=dzda*da
+        # backpropagate the dz to the previous layer, 
+        # i.e. calculate the desired activation of the previous layer using the current weights. 
+        expected = layers[i].weights.T@dz
+
+        # calculate the desired change in weights for this layer. 
+        # i.e. the change in weights that would have resulted in the desired dz assuming that the activation of the previous layer was correct. 
+        ???? #check microsoft whiteboard for the correct formula for dw
+        # notes RJR
+        # dz= layers[i-1].nodes*dw #see activation function of a layer
+        pl=dzdw_func(layers[i-1]) 
+        dw=np.linalg.pinv(pl.T@pl)@pl.T@dz
+        
+        # update the weights of this layer.
+        layers[i].weights=layers[i].weights+lr*dw
+
+    # end loop    
+    pass
     
 def backward_calculation(layers,expected):
     # run the backward calculation starting at the last layer going towards the first
@@ -96,10 +133,14 @@ def backward_calculation(layers,expected):
             dadz=dnormalize_last_layer(layers[i]) # da/dz
         else:
             dadz=dnormalization_sigmoid(layers[i].nodes) #currently fixed values for b and x0, in future these will need to be trained as well.    
-        dzdw=dzdw_func(layers[i-1])# dz/dw
+        #if activation in a node of previous layer is large, changing the weights has a large effect. 
+        #as the forward calculation is activation * weight, these values directly form the dz/dw value
+        dzdw=dzdw_func(layers[i-1])# dz/dw 
         print(dzdw.shape)
         print(dadz.shape)
         print(deda.shape)
+        #calculate expected for previous layer by projecting (feeding back) dz of current layer via weigths to previous layer
+        expected=layers[i].weights.T*dadz*deda
         dedw=dzdw.T*dadz*deda
         print(dedw.shape)
         layers[i].weights=layers[i].weights-lr*dedw
@@ -114,8 +155,8 @@ def layer_plot(layers) -> None:
         nnodes=layers[q].nodes.shape[1]
         y = np.linspace(0,1,nnodes)
         x = q/(len(layers)-1)*np.ones_like(y) #get x position of layer
-        activation=layers[q].nodes.flatten()
-        plt.scatter(x,y,s=np.abs(activation), c=activation, cmap='viridis',alpha=0.75,edgecolors='none')
+        activation=layers[q].nodes.flatten()+1
+        plt.scatter(x,y,s=np.abs(activation)*100, c=activation, cmap='viridis',alpha=0.75,edgecolors='none')
         if q == 0: #for first layer the
             continue
         nnodes_prev=layers[q-1].nodes.shape[1]
@@ -125,7 +166,7 @@ def layer_plot(layers) -> None:
         for xp, yp in zip(x_prev, y_prev):
             for xn, yn in zip(x, y):
                 i, j = np.unravel_index(idx, layers[q].weights.shape)
-                w = layers[q].weights[i,j]*1e-2
+                w = layers[q].weights[i,j]*1
                 plt.plot([xp, xn], [yp, yn], 'k-', linewidth=np.abs(w),alpha=0.5)
 
     plt.colorbar(label="Value (used for size and color)")
@@ -152,10 +193,11 @@ layers = [Layer()]  # now layer[0] exists
 # load the data
 
 x=np.random.rand(100)*6 #define 100 random points to evaluate. 
-training_data,training_labels=sf.GenSinTrainSet(x,1)#us a std of 1
+training_label,training_data=sf.GenSinTrainSet(x,0)#us a std of 0 i.e. no noise on input
+#x is input, data is input to function containing noise, label is (desired) output without noise
 #push first image into input layer
 layer_input = np.reshape(training_data[0],(1,1))
-# print(layer_input.shape)
+
 
 # define layer(s)
 # that is, build the network
@@ -174,15 +216,15 @@ trial_selector = 0
  # set the input layer
 layers[0].nodes = np.array(np.reshape(training_data[trial_selector],layers[0].nodes.shape))
  # define the expected outcome.
-expected = training_labels[trial_selector]
+expected = training_label[trial_selector]
 print(expected)
  # forward calculation
 forward_calculation(layers)
 #layer_plot(layers)
-print(get_error(expected,layers[-1].nodes)) 
+layer_plot(layers)
  
  ####
-#backward_calculation(layers,expected)
+bck_calc(layers,expected)
  
  
  

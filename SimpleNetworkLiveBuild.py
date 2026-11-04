@@ -80,6 +80,9 @@ def update_layer_backward_calculation():
 def get_error(expected,actual):
     return np.sum((actual-expected)**2)/len(actual)
 def get_derror(expected,actual):
+    print(actual)
+    print(expected)
+    print(actual-expected)
     return 2*(actual-expected)/len(actual)
     
 def backward_calculation(layers,expected):
@@ -102,7 +105,7 @@ def backward_calculation(layers,expected):
         print(deda.shape)
         dedw=dzdw.T*dadz*deda
         print(dedw.shape)
-        layers[i].weights=layers[i].weights-lr*dedw
+        layers[i].weights=layers[i].weights-lr*dedw #update weights
         print("loop completed this time")
  # How to modify the weights of the middle layer?
         
