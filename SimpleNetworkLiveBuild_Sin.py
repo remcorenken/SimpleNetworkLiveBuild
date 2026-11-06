@@ -91,7 +91,7 @@ def get_derror(expected,actual):
     return 2*(actual-expected)/len(actual)
 def bck_calc(layers,expected):
     # run the backward calculation starting at the last layer. 
-     lr = 0.01 #define a learning rate for the weight update.
+    lr = 0.01 #define a learning rate for the weight update.
     # start the loop over layers backwards.
     for i in range(len(layers)-1,0,-1):
         # get the desired change per node 
@@ -103,12 +103,11 @@ def bck_calc(layers,expected):
         dz=dzda*da
         # backpropagate the dz to the previous layer, 
         # i.e. calculate the desired activation of the previous layer using the current weights. 
-        expected = layers[i].weights.T@dz
+        print(layers[i].weights.shape)
+        expected = dz@layers[i].weights.T
 
         # calculate the desired change in weights for this layer. 
         # i.e. the change in weights that would have resulted in the desired dz assuming that the activation of the previous layer was correct. 
-        ???? #check microsoft whiteboard for the correct formula for dw
-        # notes RJR
         # dz= layers[i-1].nodes*dw #see activation function of a layer
         pl=dzdw_func(layers[i-1]) 
         dw=np.linalg.pinv(pl.T@pl)@pl.T@dz
@@ -223,8 +222,13 @@ forward_calculation(layers)
 #layer_plot(layers)
 layer_plot(layers)
  
- ####
+ # single backward calculation
 bck_calc(layers,expected)
+#build a loop to train the network over multiple training examples #run this multiple times
+#show the real data
+#show the result of the network (i.e. model) 
+#show the current network as a graph
+#end loop. 
  
  
  
