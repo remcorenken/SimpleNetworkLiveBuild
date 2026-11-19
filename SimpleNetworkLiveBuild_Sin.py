@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import SupportFunctions as sf
 import os
 
-def normalization_sigmoid(x,x0=0,b=1):
+def normalization_sigmoid(x,b=1,x0=0):
     x=x-x0
     return 1/(1+np.exp(-b*x))
 def dnormalization_sigmoid(x,x0=0,b=1):
@@ -14,7 +14,7 @@ def dnormalization_sigmoid(x,x0=0,b=1):
 def normalization_sigmoid_layer(L):
     #print(L.nodes.shape)
     for i in range(len(L.nodes)):
-        L.nodes[i]=normalization_sigmoid(L.nodes[i])
+        L.nodes[i]=normalization_sigmoid(L.nodes[i],L.b[i],L.x0[i])
     
 def normalize_last_layer(L):
     if L.nodes.size > 2:
@@ -37,6 +37,9 @@ class Layer:
     def __init__(self):
         self.nodes = np.array([])
         self.weights = np.array([])
+        self.b = np.array([])
+        self.x0 = np.array([])
+
     def __str__(self):
         return f"nodes({self.nodes.shape})\nweights({self.weights.shape})\n"
     
@@ -111,9 +114,19 @@ def bck_calc(layers,expected):
         # dz= layers[i-1].nodes*dw #see activation function of a layer
         pl=dzdw_func(layers[i-1]) 
         dw=np.linalg.pinv(pl.T@pl)@pl.T@dz
-        
         # update the weights of this layer.
         layers[i].weights=layers[i].weights+lr*dw
+        # update b and x0 of the normalization function of this layer.
+        if i==(len(layers)-1):
+            pass #do not update b and x0 of the last layer, as this is a different normalization function.
+        else:
+            # dbda = dzda*a/b nice little trick to get the derivative of the normalization function with respect to b and x0.
+            dbda = dzda*layers[i].nodes/layers[i].b
+            db= dbda*da
+            layers[i].b=layers[i].b-lr*db
+            dx0da=-dzda #x0 behaves the same as x but in oposite direction 
+            dx0=dx0da*da
+            layers[i].x0=layers[i].x0-lr*dx0
 
     # end loop    
     pass
@@ -207,16 +220,24 @@ for i in range(0,len(n_nodes_per_layer)):
         layers.append(Layer())
         layers[i].nodes = np.array(np.zeros([1 ,n_nodes_per_layer[i]]))
         layers[i].weights=np.array(np.random.uniform(-1,1,[n_nodes_per_layer[i-1],n_nodes_per_layer[i]]))
+        layers[i].b=np.array(np.ones([1,n_nodes_per_layer[i]]))
+        layers[i].x0=np.array(np.zeros([1,n_nodes_per_layer[i]]))
+
  ### copy mistake:    tmp3=dzdw(layers[i-1])# dz/dw
  ## training part.
  # loop over training examples
  # select the input and the label
+
+## start loop over training itterations
+# select a training example at random from the list
+# forward calculation
+# plot the network as a graph for q sec. 
+# backward calculation + update weights, b-s, and x0-s
 trial_selector = 0
  # set the input layer
 layers[0].nodes = np.array(np.reshape(training_data[trial_selector],layers[0].nodes.shape))
  # define the expected outcome.
 expected = training_label[trial_selector]
-print(expected)
  # forward calculation
 forward_calculation(layers)
 #layer_plot(layers)
@@ -224,6 +245,7 @@ layer_plot(layers)
  
  # single backward calculation
 bck_calc(layers,expected)
+
 #build a loop to train the network over multiple training examples #run this multiple times
 #show the real data
 #show the result of the network (i.e. model) 
